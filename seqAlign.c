@@ -18,26 +18,56 @@ void appWrapper(char* inputSequences, char* flag, char* parameters) {
 
     int score = fillTable(*m, *n, table, match, mismatch, gapExt, gap, seq1, seq2); 
 
-    retrace(*m, *n, table, gapExt, gap, numMatch, numMis, numGapExt, numGap, seq1, seq2, optSeq1, optSeq2);
+    retrace(*m, *n, table, match, mismatch, gapExt, gap, numMatch, numMis, numGapExt, numGap, seq1, seq2, optSeq1, optSeq2);
 
 }
 
-void retrace(int m, int n, CELL (*table)[][n], int gapExt, int gap, int *numMatch, int *numMis, int *numGapExt, int *numGap, char *seq1, char *seq2, char *optSeq1, char *optSeq2) {
-    int i = 0, j = 0
-    int case = 0;
+int getNext(int max, int s, int d, int i) {
+    if(max == s) return 1;
+    if(max == d) return 2;
+    else return 3;
+}
 
-    int maxLastCell = max((*table)[m][n].Sscore, (*table)[m][n].Dscore, (*table)[m][n].Iscore);
+void retrace(int m, int n, CELL (*table)[][n], int match, int mismatch, int gapExt, int gap, int *numMatch, int *numMis, int *numGapExt, int *numGap, char *seq1, char *seq2, char *optSeq1, char *optSeq2) {
+    int i = m - 1, j = n - 1, k = 0, substitution = 0, next = 0;
+
+    int maximum = max((*table)[m][n].Sscore, (*table)[m][n].Dscore, (*table)[m][n].Iscore);
+    next = getNext(maximum, (*table)[m][n].Sscore, (*table)[m][n].Dscore, (*table)[m][n].Iscore);
+    
     
     while(i != 0 || j != 0) {
-        if(maxLastCell == (*table)[m][n].Sscore || case == 1) {
-            *(optSeq1 + i) = seq1[i], *(optSeq1 + i) = seq2[j];
+        printf("%d %d %d\n", next, i, j);
+        printf("%d\n", max((*table)[0][1].Iscore, (*table)[0][1].Iscore, (*table)[0][1].Iscore));
+        if(next == 1) {
+            printf("hi\n");
+            substitution = sub(i, j, match, mismatch, seq1, seq2);
+            if(substitution == match) (*numMatch)++;
+            else (*numMis)++;
+            *(optSeq1 + k) = seq1[i], *(optSeq1 + k) = seq2[j];
             i -= 1, j -= 1;
-        } else if(maxLastCell == (*table)[m][n].Dscore) {
-
+            printf("hi\n");
+            //it's right here: after subtracting, i=-1
+            printf("%d %d %d\n", (*table)[i-1][j-1].Sscore, (*table)[i-1][j-1].Dscore, (*table)[i-1][j-1].Iscore);
+            maximum = max((*table)[i-1][j-1].Sscore, (*table)[i-1][j-1].Dscore, (*table)[i-1][j-1].Iscore);
+            printf("hi\n");
+            next = getNext(maximum, (*table)[i-1][j-1].Sscore, (*table)[i-1][j-1].Dscore, (*table)[i-1][j-1].Iscore);
+        } else if(next == 2) {
+            *(optSeq1 + k) = seq1[i], *(optSeq2 + k) = '_';
+            i -= 1;
+            maximum = max((*table)[i-1][j].Sscore + gapExt + gap, (*table)[i-1][j].Dscore + gap, (*table)[i-1][j].Iscore + gapExt + gap);
+            next = getNext(maximum, (*table)[i-1][j].Sscore + gapExt + gap, (*table)[i-1][j].Dscore + gap, (*table)[i-1][j].Iscore + gapExt + gap);
         } else {
-
+            *(optSeq1 + k) = '_', *(optSeq2 + k) = seq2[j];
+            j -= 1;
+            maximum = max((*table)[i][j-1].Sscore + gapExt + gap, (*table)[i][j-1].Dscore + gapExt + gap, (*table)[i][j-1].Iscore + gap);
+            next = getNext(maximum, (*table)[i][j-1].Sscore + gapExt + gap, (*table)[i][j-1].Dscore + gapExt + gap, (*table)[i][j-1].Iscore + gap);
         }
+        k++;
+        printf("%d\n", next);
+        //printf("%d\n", k);
+        //printf("%d %d %d\n", next, i, j);
     }
+    printf("%d %d %d\n", next, i, j);
 }
 
 int fillTable(int m, int n, CELL (*table)[][n], int match, int mismatch, int gapExt, int gap, char *seq1, char *seq2) {
@@ -135,11 +165,13 @@ void calculateStringLength(char* inputSequences, int* m, int* n, char *seq1, cha
             markerCount++;
             i = 0;
         }
+        
         if(isBase(c) == 1 && markerCount == 4) {
             tempN++;
             *(seq2 + i) = c;
             i++;
         }
+        
     }
     *(seq2 + i) = '\0';
 
@@ -151,6 +183,6 @@ void calculateStringLength(char* inputSequences, int* m, int* n, char *seq1, cha
 }
 
 int isBase(char c) {
-    if(c == 'A' || c =='G' || c == 'T' || c == 'A') return 1;
+    if(c == 'A' || c =='G' || c == 'T' || c == 'C') return 1;
     else return 0;
 }

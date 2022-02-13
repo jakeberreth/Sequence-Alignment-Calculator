@@ -17,3 +17,4 @@ void retrace(int m, int n, CELL (*table)[][n], int match, int mismatch, int gapE
 int isBase(char c);
 int max(int a, int b, int c);
 int sub(int i, int j, int match, int mismatch, char *seq1, char *seq2);
+int getNext(int max, int s, int d, int i);
